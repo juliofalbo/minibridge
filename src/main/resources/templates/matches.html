@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8">
+  <title>Mini Bridge - Start a Match</title>
+</head>
+<body>
+
+<a th:href="@{/logout}">Logout</a>
+
+<h2 th:if="${!matches.isEmpty()}">Partidas Iniciadas</h2>
+
+<ul th:if="${matches}">
+  <li th:each="match: ${matches}">
+    <a th:href="@{'/match/' + ${match.id}}" th:text="${#temporals.format(match.createdAt, 'dd/MM/yyyy HH:mm')}"></a>
+  </li>
+</ul>
+
+<hr />
+
+<h2>Nova Partida</h2>
+
+<form action="#" th:action="@{/match/start}" th:object="${match}" method="post">
+  Jogador 1 <input type="text" th:field="*{player1}"/>
+  <br />
+  Jogador 2 <input type="text" th:field="*{player2}"/>
+  <br />
+  Jogador 3 <input type="text" th:field="*{player3}"/>
+  <br />
+  Jogador 4 <input type="text" th:field="*{player4}"/>
+  <br />
+  Jogador 5 <input type="text" th:field="*{player5}"/>
+  <br />
+  Jogador 6 <input type="text" th:field="*{player6}"/>
+  <br />
+  Jogador 7 <input type="text" th:field="*{player7}"/>
+  <br />
+  Jogador 8 <input type="text" th:field="*{player8}"/>
+  <br />
+
+  <input type="submit"/>
+</form>
+
+</body>
+</html>

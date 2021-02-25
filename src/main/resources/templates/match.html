@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8">
+  <title>Mini Bridge - Match</title>
+</head>
+<body>
+
+<h1 th:if="${winner}">Vencedor: </h1>
+<h1 th:text="${winner}" th:if="${winner}"></h1>
+<h1 th:text="${error}" th:if="${error}" style="color: red"></h1>
+
+<table border="1" th:if="${olderRounds}" th:each="rd: ${olderRounds}">
+  <tr>
+    <th colspan="6">Rodada <span th:text="${rd.getCurrentRoundIdx()}"></span></th>
+  </tr>
+  <tr>
+    <th>Ranking</th>
+    <th>Jogador</th>
+    <th>Palpite</th>
+    <th>Bolinhos Ganhos</th>
+    <th>Pontuacao Parcial</th>
+    <th>Acertou?</th>
+  </tr>
+  <tr th:each="rdu, rowStat: ${rd.userRounds}">
+    <td th:text="${rowStat.index + 1}"></td>
+    <td th:text="${rdu.player.name}"></td>
+    <td th:text="${rdu.shot}"></td>
+    <td th:text="${rdu.numberOfSetOfCardsWon}"></td>
+    <td th:text="${rdu.getScore()}"></td>
+    <td th:text="${rdu.getSuccessTranslated()}"></td>
+  </tr>
+</table>
+
+<hr>
+
+<form action="#" th:action="@{/match/round}" th:if="${currentRound}" th:object="${currentRound}" method="POST">
+
+  <input type="hidden" th:field="*{id}"/>
+  <input type="hidden" th:field="*{idx}"/>
+  <input type="hidden" th:field="*{match}"/>
+  <input type="hidden" th:field="*{userRounds}"/>
+
+  <table border="1">
+    <tr>
+      <th colspan="6">Rodada <span th:text="${currentRound.getCurrentRoundIdx()}"></span></th>
+    </tr>
+    <tr>
+      <th>Jogador</th>
+      <th>Palpite</th>
+      <th>Bolinhos Ganhos</th>
+    </tr>
+    <tr th:each="rdu, rowStat: *{userRounds}">
+      <td th:text="${rdu.player.name}"></td>
+      <td>
+        <span th:if="${rdu.shot}" th:text="${rdu.shot}"></span>
+        <input th:unless="${rdu.shot}" type="number" th:field="*{userRounds[__${rowStat.index}__].shot}" required>
+      </td>
+      <td>
+        <span th:if="${rdu.numberOfSetOfCardsWon}" th:text="${rdu.numberOfSetOfCardsWon}"></span>
+        <input th:unless="${rdu.numberOfSetOfCardsWon}" type="number"
+               th:field="*{userRounds[__${rowStat.index}__].numberOfSetOfCardsWon}" required>
+      </td>
+    </tr>
+  </table>
+  <button type="submit">Save and Go to Next Round</button>
+</form>
+
+<br>
+
+</body>
+
+</html>
