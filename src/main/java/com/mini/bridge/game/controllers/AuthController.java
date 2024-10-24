@@ -8,6 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class AuthController {
@@ -37,9 +38,15 @@ public class AuthController {
     }
 
     @PostMapping("/public/user")
-    public String start(@ModelAttribute(value = "user") User user, Model model) {
+    public String start(@ModelAttribute(value = "user") User user, RedirectAttributes model) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        authService.save(user);
+        try {
+            authService.save(user);
+            model.addFlashAttribute("successMessage", "User " + user.getUsername() + " created");
+        } catch (Exception e) {
+            model.addFlashAttribute("errorMessage", "Error while creating user " + user.getUsername());
+        }
+
         return "redirect:/login";
     }
 }

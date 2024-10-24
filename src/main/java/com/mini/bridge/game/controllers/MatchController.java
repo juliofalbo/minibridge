@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -46,7 +47,7 @@ public class MatchController {
     }
 
     @PostMapping("/match/start")
-    public String start(@ModelAttribute(value = "match") MatchStart matchStart, Model model) {
+    public String start(@ModelAttribute(value = "match") MatchStart matchStart, RedirectAttributes model) {
         Match match = new Match();
 
         for (String playerName : matchStart.listOfPlayers()) {
@@ -61,11 +62,12 @@ public class MatchController {
 
         match.addRounds(roundService.save(round));
 
-        model.addAttribute("match", save);
+        model.addFlashAttribute("match", save);
 
-        model.addAttribute("currentRound", round);
-        model.addAttribute("olderRounds", new ArrayList<>());
-        return "match";
+        model.addFlashAttribute("currentRound", round);
+        model.addFlashAttribute("olderRounds", new ArrayList<>());
+
+        return "redirect:/match/"+save.getId();
     }
 
     @GetMapping("/match/{id}")
@@ -94,19 +96,19 @@ public class MatchController {
     }
 
     @PostMapping("/match/round")
-    public String saveRound(@ModelAttribute Round currentRound, Model model) {
+    public String saveRound(@ModelAttribute Round currentRound, RedirectAttributes model) {
         Integer integer = currentRound.getUserRounds().stream().map(RoundUser::getNumberOfSetOfCardsWon).reduce(Integer::sum).orElse(0);
 
         Match match = currentRound.getMatch();
         List<Round> rounds = match.getRounds();
 
         if (!currentRound.getCurrentRoundIdxInteger().equals(integer)) {
-            model.addAttribute("olderRounds", rounds);
-            model.addAttribute("match", match);
-            model.addAttribute("currentRound", currentRound);
+            model.addFlashAttribute("olderRounds", rounds);
+            model.addFlashAttribute("match", match);
+            model.addFlashAttribute("currentRound", currentRound);
 
-            model.addAttribute("error", "O número total de chutes deve ser igual a " + currentRound.getCurrentRoundIdxInteger());
-            return "match";
+            model.addFlashAttribute("error", "O número total de chutes deve ser igual a " + currentRound.getCurrentRoundIdxInteger());
+            return "redirect:/match/"+match.getId();
         }
 
         roundService.save(currentRound);
@@ -115,7 +117,7 @@ public class MatchController {
         Integer lastRoundIdx = maxNumberOfRounds + maxNumberOfRounds + 1;
 
         if (!lastRoundIdx.equals(rounds.size())) {
-            model.addAttribute("currentRound", createRound(match, rounds.get(rounds.size() - 1)));
+            model.addFlashAttribute("currentRound", createRound(match, rounds.get(rounds.size() - 1)));
         } else {
             Round round = rounds.get(rounds.size() - 1);
 
@@ -127,13 +129,13 @@ public class MatchController {
                 return roundUser2;
             }).orElse(null);
 
-            model.addAttribute("winner", winner.getPlayer().getName());
+            model.addFlashAttribute("winner", winner.getPlayer().getName());
         }
 
         rounds.forEach(round -> round.getUserRounds().sort(Comparator.comparing(RoundUser::getScore).reversed()));
-        model.addAttribute("olderRounds", rounds);
-        model.addAttribute("match", match);
-        return "match";
+        model.addFlashAttribute("olderRounds", rounds);
+        model.addFlashAttribute("match", match);
+        return "redirect:/match/"+match.getId();
     }
 
     private Round createRound(Match match, Round lastRound) {

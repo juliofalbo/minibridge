@@ -3,71 +3,160 @@
 <head>
   <meta charset="UTF-8">
   <title>Mini Bridge - Match</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+  <style>
+    .container-match {
+      margin-top: 50px;
+    }
+
+    .winner-header {
+      color: darkblue;
+      margin-bottom: 30px;
+    }
+
+    .error-header {
+      color: red;
+      margin-bottom: 30px;
+    }
+
+    .error-alert {
+      background-color: #ffebee; /* Light red background */
+      color: #c62828; /* Dark red text */
+      border: 1px solid #ef5350; /* Border color */
+      border-radius: 5px; /* Rounded corners */
+      padding: 15px; /* Padding */
+      margin-bottom: 30px; /* Margin below the alert */
+      display: flex; /* Flex display for icon and text */
+      align-items: center; /* Center items vertically */
+    }
+
+    .error-alert i {
+      margin-right: 10px; /* Spacing between icon and text */
+    }
+
+    h4, .rodadas-anteriores {
+      color: #333; /* Dark gray */
+    }
+
+    table {
+      margin-bottom: 30px;
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: center;
+      border: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #f2f2f2; /* Light gray */
+    }
+
+    .first-row {
+      background-color: #c8e6c9; /* Light green */
+    }
+
+    .last-row {
+      background-color: #ffccbc; /* Light red */
+    }
+
+    .save-btn {
+      margin-top: 20px;
+    }
+  </style>
 </head>
 <body>
 
-<h1 th:if="${winner}">Vencedor: </h1>
-<h1 th:text="${winner}" th:if="${winner}"></h1>
-<h1 th:text="${error}" th:if="${error}" style="color: red"></h1>
+<div class="container container-match">
+  <h1 th:if="${winner}" class="winner-header">
+    <i class="material-icons left">emoji_events</i>Vencedor: <span th:text="${winner}"></span>
+  </h1>
 
-<table border="1" th:if="${olderRounds}" th:each="rd: ${olderRounds}">
-  <tr>
-    <th colspan="6">Rodada <span th:text="${rd.getCurrentRoundIdx()}"></span></th>
-  </tr>
-  <tr>
-    <th>Ranking</th>
-    <th>Jogador</th>
-    <th>Palpite</th>
-    <th>Bolinhos Ganhos</th>
-    <th>Pontuacao Parcial</th>
-    <th>Acertou?</th>
-  </tr>
-  <tr th:each="rdu, rowStat: ${rd.userRounds}">
-    <td th:text="${rowStat.index + 1}"></td>
-    <td th:text="${rdu.player.name}"></td>
-    <td th:text="${rdu.shot}"></td>
-    <td th:text="${rdu.numberOfSetOfCardsWon}"></td>
-    <td th:text="${rdu.getScore()}"></td>
-    <td th:text="${rdu.getSuccessTranslated()}"></td>
-  </tr>
-</table>
+  <!-- Improved Error Alert -->
+  <div th:if="${error}" class="error-alert">
+    <i class="material-icons">error</i>
+    <span th:text="${error}"></span>
+  </div>
 
-<hr>
-
-<form action="#" th:action="@{/match/round}" th:if="${currentRound}" th:object="${currentRound}" method="POST">
-
-  <input type="hidden" th:field="*{id}"/>
-  <input type="hidden" th:field="*{idx}"/>
-  <input type="hidden" th:field="*{match}"/>
-  <input type="hidden" th:field="*{userRounds}"/>
-
-  <table border="1">
+  <h4 class="rodadas-anteriores">Rodadas Anteriores</h4>
+  <table class="highlight centered" th:if="${olderRounds}" th:each="rd, rowStat: ${olderRounds}">
+    <thead>
     <tr>
-      <th colspan="6">Rodada <span th:text="${currentRound.getCurrentRoundIdx()}"></span></th>
+      <th colspan="6" class="center-align">Rodada <span th:text="${rd.getCurrentRoundIdx()}"></span></th>
     </tr>
     <tr>
+      <th>Ranking</th>
       <th>Jogador</th>
       <th>Palpite</th>
       <th>Bolinhos Ganhos</th>
+      <th>Pontuação Parcial</th>
+      <th>Acertou?</th>
     </tr>
-    <tr th:each="rdu, rowStat: *{userRounds}">
+    </thead>
+    <tbody>
+    <tr th:each="rdu, rowStat : ${rd.userRounds}"
+        th:class="${rowStat.index == 0 ? 'first-row' : (rowStat.index == (rd.userRounds.size() - 1) ? 'last-row' : '')}">
+      <td th:text="${rowStat.index + 1}"></td>
       <td th:text="${rdu.player.name}"></td>
-      <td>
-        <span th:if="${rdu.shot}" th:text="${rdu.shot}"></span>
-        <input th:unless="${rdu.shot}" type="number" th:field="*{userRounds[__${rowStat.index}__].shot}" required>
-      </td>
-      <td>
-        <span th:if="${rdu.numberOfSetOfCardsWon}" th:text="${rdu.numberOfSetOfCardsWon}"></span>
-        <input th:unless="${rdu.numberOfSetOfCardsWon}" type="number"
-               th:field="*{userRounds[__${rowStat.index}__].numberOfSetOfCardsWon}" required>
-      </td>
+      <td th:text="${rdu.shot}"></td>
+      <td th:text="${rdu.numberOfSetOfCardsWon}"></td>
+      <td th:text="${rdu.getScore()}"></td>
+      <td th:text="${rdu.getSuccessTranslated()}"></td>
     </tr>
+    </tbody>
   </table>
-  <button type="submit">Save and Go to Next Round</button>
-</form>
 
-<br>
+  <hr/>
+
+  <h4 th:if="${currentRound}">Rodada Atual</h4>
+
+  <form th:action="@{/match/round}" th:if="${currentRound}" th:object="${currentRound}" method="POST">
+
+    <input type="hidden" th:field="*{id}"/>
+    <input type="hidden" th:field="*{idx}"/>
+    <input type="hidden" th:field="*{match}"/>
+    <input type="hidden" th:field="*{userRounds}"/>
+
+    <table class="highlight centered">
+      <thead>
+      <tr>
+        <th colspan="6" class="center-align">Rodada <span th:text="${currentRound.getCurrentRoundIdx()}"></span></th>
+      </tr>
+      <tr>
+        <th>Jogador</th>
+        <th>Palpite</th>
+        <th>Bolinhos Ganhos</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="rdu, rowStat: *{userRounds}">
+        <td th:text="${rdu.player.name}"></td>
+        <td>
+          <span th:if="${rdu.shot}" th:text="${rdu.shot}"></span>
+          <input th:unless="${rdu.shot}" type="number" class="validate" th:field="*{userRounds[__${rowStat.index}__].shot}" required>
+        </td>
+        <td>
+          <span th:if="${rdu.numberOfSetOfCardsWon}" th:text="${rdu.numberOfSetOfCardsWon}"></span>
+          <input th:unless="${rdu.numberOfSetOfCardsWon}" type="number" class="validate"
+                 th:field="*{userRounds[__${rowStat.index}__].numberOfSetOfCardsWon}" required>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="center-align save-btn">
+      <button class="btn waves-effect waves-light" type="submit">
+        Save and Go to Next Round
+        <i class="material-icons right">arrow_forward</i>
+      </button>
+    </div>
+  </form>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 
 </body>
-
 </html>

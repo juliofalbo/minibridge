@@ -3,19 +3,59 @@
 <head>
   <meta charset="UTF-8">
   <title>Mini Bridge - Create User</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+  <style>
+    .container-create-user {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    .card-create-user {
+      padding: 40px;
+      width: 400px;
+    }
+
+    .input-field input[type="text"],
+    .input-field input[type="password"] {
+      border-bottom: 1px solid #9e9e9e;
+    }
+  </style>
 </head>
 <body>
 
-<h2>Novo Usuário</h2>
+<div class="container-create-user">
+  <div class="card-panel card-create-user z-depth-3">
+    <h5 class="center-align">Novo Usuário</h5>
 
-<form action="#" th:action="@{/public/user}" th:object="${user}" method="post">
-  Nome de Usuário <input type="text" th:field="*{username}"/>
-  <br />
-  Senha <input type="password" th:field="*{password}"/>
-  <br />
+    <form th:action="@{/public/user}" th:object="${user}" method="post">
 
-  <input type="submit"/>
-</form>
+      <div class="input-field">
+        <i class="material-icons prefix">account_circle</i>
+        <input id="username" type="text" th:field="*{username}" required>
+        <label for="username">Nome de Usuário</label>
+      </div>
+
+      <div class="input-field">
+        <i class="material-icons prefix">lock</i>
+        <input id="password" type="password" th:field="*{password}" required>
+        <label for="password">Senha</label>
+      </div>
+
+      <div class="center-align">
+        <button class="btn waves-effect waves-light" type="submit">
+          Criar Usuário
+          <i class="material-icons right">send</i>
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 
 </body>
 </html>
