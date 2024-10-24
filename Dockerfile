@@ -7,7 +7,7 @@ COPY src /usr/src/app/src
 RUN mvn -f /usr/src/app/pom.xml clean package -Dmaven.test.skip
 
 FROM openjdk:17-oracle
-COPY --from=build /usr/src/app/target/minibridge-0.0.1-SNAPSHOT.jar /usr/app/minibridge-0.0.1-SNAPSHOT.jar
+COPY --from=build /usr/src/app/target/game-0.0.1-SNAPSHOT.jar /usr/app/game-0.0.1-SNAPSHOT.jar
 
 EXPOSE 8080
-ENTRYPOINT [ "java", "-Dspring.profiles.active=prod", "-jar", "/usr/app/minibridge-0.0.1-SNAPSHOT.jar" ]
+ENTRYPOINT [ "java", "-Dspring.profiles.active=prod", "-jar", "/usr/app/game-0.0.1-SNAPSHOT.jar" ]
