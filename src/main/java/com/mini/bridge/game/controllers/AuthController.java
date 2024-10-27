@@ -23,7 +23,7 @@ public class AuthController {
 
     @GetMapping("/")
     public String index(Model model) {
-        return "redirect:/login";
+        return "redirect:/match/all";
     }
 
     @GetMapping("/login")

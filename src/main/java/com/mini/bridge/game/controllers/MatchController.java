@@ -67,7 +67,7 @@ public class MatchController {
         model.addFlashAttribute("currentRound", round);
         model.addFlashAttribute("olderRounds", new ArrayList<>());
 
-        return "redirect:/match/"+save.getId();
+        return "redirect:/match/" + save.getId();
     }
 
     @GetMapping("/match/{id}")
@@ -108,7 +108,7 @@ public class MatchController {
             model.addFlashAttribute("currentRound", currentRound);
 
             model.addFlashAttribute("error", "O número total de chutes deve ser igual a " + currentRound.getCurrentRoundIdxInteger());
-            return "redirect:/match/"+match.getId();
+            return "redirect:/match/" + match.getId();
         }
 
         roundService.save(currentRound);
@@ -117,7 +117,8 @@ public class MatchController {
         Integer lastRoundIdx = maxNumberOfRounds + maxNumberOfRounds + 1;
 
         if (!lastRoundIdx.equals(rounds.size())) {
-            model.addFlashAttribute("currentRound", createRound(match, rounds.get(rounds.size() - 1)));
+            Round newRound = createRound(match, rounds.get(rounds.size() - 1));
+            model.addFlashAttribute("currentRound", newRound);
         } else {
             Round round = rounds.get(rounds.size() - 1);
 
@@ -135,20 +136,44 @@ public class MatchController {
         rounds.forEach(round -> round.getUserRounds().sort(Comparator.comparing(RoundUser::getScore).reversed()));
         model.addFlashAttribute("olderRounds", rounds);
         model.addFlashAttribute("match", match);
-        return "redirect:/match/"+match.getId();
+        return "redirect:/match/" + match.getId();
     }
 
     private Round createRound(Match match, Round lastRound) {
         Round round = roundService.save(new Round(match, match.getRounds().size() + 1));
 
+        int currentOrder = 0;
         for (Player player : match.getPlayers()) {
             Integer previousScore = 0;
+
             if (lastRound != null) {
-                previousScore = lastRound.findRoundByPlayer(player).getScore();
+                RoundUser roundByPlayer = lastRound.findRoundByPlayer(player);
+                previousScore = roundByPlayer.getScore();
+
+                if (roundByPlayer.getCurrentOrder() == 1) {
+                    currentOrder = match.getPlayers().size();
+                } else {
+                    currentOrder = roundByPlayer.getCurrentOrder() - 1;
+                }
+            } else {
+                currentOrder = currentOrder + 1;
             }
 
-            round.addUserRounds(roundUserService.save(new RoundUser(round, player, previousScore)));
+            round.addUserRounds(roundUserService.save(new RoundUser(round, player, previousScore, currentOrder)));
         }
+
+        round.getUserRounds().forEach(roundUser -> {
+            System.out.println(roundUser.getPlayer().getName() + " - " + roundUser.getCurrentOrder());
+        });
+
+        round.getUserRounds().sort(Comparator.comparing(RoundUser::getCurrentOrder));
+
+        System.out.println("-----------");
+
+        round.getUserRounds().forEach(roundUser -> {
+            System.out.println(roundUser.getPlayer().getName() + " - " + roundUser.getCurrentOrder());
+        });
+
         return round;
     }
 
