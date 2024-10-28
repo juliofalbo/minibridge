@@ -12,15 +12,13 @@ import com.mini.bridge.game.services.RoundUserService;
 import com.mini.bridge.game.services.AuthService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 @Controller
 public class MatchController {
@@ -30,6 +28,8 @@ public class MatchController {
     private final RoundService roundService;
     private final RoundUserService roundUserService;
     private final AuthService authService;
+    private final String ACTION_RESULT = "resultados";
+    private final String ACTION_SHOT = "palpites";
 
     public MatchController(MatchService matchService, PlayerService playerService, RoundService roundService, RoundUserService roundUserService, AuthService authService) {
         this.matchService = matchService;
@@ -66,6 +66,7 @@ public class MatchController {
 
         model.addFlashAttribute("currentRound", round);
         model.addFlashAttribute("olderRounds", new ArrayList<>());
+        model.addFlashAttribute("action", ACTION_SHOT);
 
         return "redirect:/match/" + save.getId();
     }
@@ -96,22 +97,43 @@ public class MatchController {
     }
 
     @PostMapping("/match/round")
-    public String saveRound(@ModelAttribute Round currentRound, RedirectAttributes model) {
-        Integer integer = currentRound.getUserRounds().stream().map(RoundUser::getNumberOfSetOfCardsWon).reduce(Integer::sum).orElse(0);
+    public String saveRound(@ModelAttribute Round currentRound, @RequestParam(required = false) String action, RedirectAttributes model) {
 
         Match match = currentRound.getMatch();
         List<Round> rounds = match.getRounds();
+
+        rounds.forEach(round -> {
+            System.out.println(round.getIdx());
+        });
+
+        rounds.sort(Comparator.comparing(Round::getIdx).reversed());
+
+        System.out.println("----------------------");
+
+        rounds.forEach(round -> {
+            System.out.println(round.getIdx());
+        });
+
+        if (!Objects.equals(action, ACTION_RESULT)) {
+            Round save = roundService.save(currentRound);
+            model.addFlashAttribute("currentRound", save);
+            model.addFlashAttribute("olderRounds", rounds);
+            model.addFlashAttribute("match", match);
+            model.addFlashAttribute("action", ACTION_RESULT);
+            return "redirect:/match/" + match.getId();
+        }
+
+        Integer integer = currentRound.getUserRounds().stream().map(RoundUser::getNumberOfSetOfCardsWon).reduce(Integer::sum).orElse(0);
 
         if (!currentRound.getCurrentRoundIdxInteger().equals(integer)) {
             model.addFlashAttribute("olderRounds", rounds);
             model.addFlashAttribute("match", match);
             model.addFlashAttribute("currentRound", currentRound);
+            model.addFlashAttribute("action", ACTION_RESULT);
 
             model.addFlashAttribute("error", "O número total de chutes deve ser igual a " + currentRound.getCurrentRoundIdxInteger());
             return "redirect:/match/" + match.getId();
         }
-
-        roundService.save(currentRound);
 
         Integer maxNumberOfRounds = match.getMaxNumberOfRounds();
         Integer lastRoundIdx = maxNumberOfRounds + maxNumberOfRounds + 1;
@@ -136,7 +158,15 @@ public class MatchController {
         rounds.forEach(round -> round.getUserRounds().sort(Comparator.comparing(RoundUser::getScore).reversed()));
         model.addFlashAttribute("olderRounds", rounds);
         model.addFlashAttribute("match", match);
+        model.addFlashAttribute("action", ACTION_SHOT);
+
         return "redirect:/match/" + match.getId();
+    }
+
+    @GetMapping("/match/delete/77/{id}")
+    public String delete(@PathVariable Long id, Model model) {
+        matchService.delete(id);
+        return "redirect:/match/all";
     }
 
     private Round createRound(Match match, Round lastRound) {
@@ -162,24 +192,6 @@ public class MatchController {
             round.addUserRounds(roundUserService.save(new RoundUser(round, player, previousScore, currentOrder)));
         }
 
-        round.getUserRounds().forEach(roundUser -> {
-            System.out.println(roundUser.getPlayer().getName() + " - " + roundUser.getCurrentOrder());
-        });
-
-        round.getUserRounds().sort(Comparator.comparing(RoundUser::getCurrentOrder));
-
-        System.out.println("-----------");
-
-        round.getUserRounds().forEach(roundUser -> {
-            System.out.println(roundUser.getPlayer().getName() + " - " + roundUser.getCurrentOrder());
-        });
-
         return round;
-    }
-
-    @GetMapping("/match/delete/77/{id}")
-    public String delete(@PathVariable Long id, Model model) {
-        matchService.delete(id);
-        return "redirect:/match/all";
     }
 }
