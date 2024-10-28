@@ -23,6 +23,8 @@ public class RoundUser {
 
     private Integer score;
 
+    private Integer currentOrder;
+
     public RoundUser(Player player, Integer shot) {
         this.player = player;
         this.shot = shot;
@@ -33,10 +35,11 @@ public class RoundUser {
         this.round = round;
     }
 
-    public RoundUser(Round round, Player player, Integer previousScore) {
+    public RoundUser(Round round, Player player, Integer previousScore, Integer currentOrder) {
         this.player = player;
         this.round = round;
         this.score = previousScore;
+        this.currentOrder = currentOrder;
     }
 
     public RoundUser() {
@@ -115,5 +118,13 @@ public class RoundUser {
         }
 
         this.score += calculateRoundScore();
+    }
+
+    public Integer getCurrentOrder() {
+        return currentOrder;
+    }
+
+    public void setCurrentOrder(Integer currentOrder) {
+        this.currentOrder = currentOrder;
     }
 }

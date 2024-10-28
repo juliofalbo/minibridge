@@ -116,7 +116,7 @@ public class Match {
 
     public Round getLastRound() {
         List<Round> rounds = getRounds();
-        if (rounds.size() == (getMaxNumberOfRounds() + getMaxNumberOfRounds() + 1)) {
+        if (rounds.size() == (getMaxNumberOfRounds() + getMaxNumberOfRounds() + 2)) {
             return null;
         }
         return rounds.get(rounds.size() - 1);
