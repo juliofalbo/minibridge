@@ -76,9 +76,12 @@ public class MatchController {
         Match match = matchService.find(id);
         model.addAttribute("match", match);
 
-        Round lastRound = match.getLastRound();
+        boolean finalCall = model.getAttribute("winner") != null;
+        Round lastRound = match.getLastRound(finalCall);
 
-        model.addAttribute("olderRounds", match.getOlderRounds());
+        List<Round> olderRounds = match.getOlderRounds(finalCall);
+        olderRounds.sort(Comparator.comparing(Round::getIdx).reversed());
+        model.addAttribute("olderRounds", olderRounds);
 
         if (lastRound == null) {
             Round round = match.getRounds().get(match.getRounds().size() - 1);
@@ -116,21 +119,22 @@ public class MatchController {
             model.addFlashAttribute("action", ACTION_RESULT);
             return "redirect:/match/" + match.getId();
         } else {
+
+            Integer wonSetCount = currentRound.getUserRounds().stream().map(RoundUser::getNumberOfSetOfCardsWon).reduce(Integer::sum).orElse(0);
+
+            if (!currentRound.getCurrentRoundIdxInteger().equals(wonSetCount)) {
+                model.addFlashAttribute("olderRounds", rounds);
+                model.addFlashAttribute("match", match);
+                model.addFlashAttribute("currentRound", currentRound);
+                model.addFlashAttribute("action", ACTION_RESULT);
+
+                model.addFlashAttribute("error", "O número total de chutes deve ser igual a " + currentRound.getCurrentRoundIdxInteger());
+                return "redirect:/match/" + match.getId();
+            }
+
             currentRound.getUserRounds().forEach(RoundUser::calculateScore);
             currentRound.getUserRounds().forEach(roundUserService::save);
             roundService.save(currentRound);
-        }
-
-        Integer wonSetCount = currentRound.getUserRounds().stream().map(RoundUser::getNumberOfSetOfCardsWon).reduce(Integer::sum).orElse(0);
-
-        if (!currentRound.getCurrentRoundIdxInteger().equals(wonSetCount)) {
-            model.addFlashAttribute("olderRounds", rounds);
-            model.addFlashAttribute("match", match);
-            model.addFlashAttribute("currentRound", currentRound);
-            model.addFlashAttribute("action", ACTION_RESULT);
-
-            model.addFlashAttribute("error", "O número total de chutes deve ser igual a " + currentRound.getCurrentRoundIdxInteger());
-            return "redirect:/match/" + match.getId();
         }
 
         Integer maxNumberOfRounds = match.getMaxNumberOfRounds();
@@ -154,7 +158,6 @@ public class MatchController {
             model.addFlashAttribute("winner", winner.getPlayer().getName());
         }
 
-        rounds.forEach(round -> round.getUserRounds().sort(Comparator.comparing(RoundUser::getScore).reversed()));
         model.addFlashAttribute("olderRounds", rounds);
         model.addFlashAttribute("match", match);
         model.addFlashAttribute("action", ACTION_SHOT);

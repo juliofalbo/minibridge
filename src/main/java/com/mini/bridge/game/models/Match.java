@@ -114,21 +114,21 @@ public class Match {
         this.updatedAt = updatedAt;
     }
 
-    public Round getLastRound() {
+    public Round getLastRound(boolean finalCall) {
         List<Round> rounds = getRounds();
-        if (rounds.size() == (getMaxNumberOfRounds() + getMaxNumberOfRounds() + 2)) {
+        if ((rounds.size() == (getMaxNumberOfRounds() + getMaxNumberOfRounds() + 1)) && finalCall) {
             return null;
         }
         return rounds.get(rounds.size() - 1);
     }
 
-    public List<Round> getOlderRounds() {
+    public List<Round> getOlderRounds(boolean finalCall) {
         List<Round> rounds = getRounds();
 
         if (rounds.size() == 1) {
             return new ArrayList<>();
         }
-        Round lastRound = getLastRound();
+        Round lastRound = getLastRound(finalCall);
 
         if (lastRound == null) {
             rounds.forEach(round -> round.getUserRounds().sort(Comparator.comparing(RoundUser::getScore).reversed()));

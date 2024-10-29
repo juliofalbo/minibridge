@@ -107,11 +107,11 @@
         <td th:text="${rdu.player.name}"></td>
         <td>
           <span th:if="${rdu.shot}" th:text="${rdu.shot}"></span>
-          <input th:unless="${rdu.shot}" type="number" class="validate" th:field="*{userRounds[__${rowStat.index}__].shot}" required th:readonly="${action == 'resultados'}">
+          <input th:unless="${rdu.shot}" type="number" min="0" class="validate" th:field="*{userRounds[__${rowStat.index}__].shot}" required th:readonly="${action == 'resultados'}">
         </td>
         <td>
           <span th:if="${rdu.numberOfSetOfCardsWon}" th:text="${rdu.numberOfSetOfCardsWon}"></span>
-          <input th:unless="${rdu.numberOfSetOfCardsWon}" type="number" class="validate" th:field="*{userRounds[__${rowStat.index}__].numberOfSetOfCardsWon}" required th:readonly="${action == 'palpites'}">
+          <input th:unless="${rdu.numberOfSetOfCardsWon}" type="number" min="0" class="validate" th:field="*{userRounds[__${rowStat.index}__].numberOfSetOfCardsWon}" required th:readonly="${action == 'palpites'}">
         </td>
       </tr>
       </tbody>
