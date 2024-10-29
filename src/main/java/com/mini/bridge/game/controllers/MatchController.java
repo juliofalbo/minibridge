@@ -77,7 +77,7 @@ public class MatchController {
         model.addAttribute("match", match);
 
         Round lastRound = match.getLastRound();
-        model.addAttribute("currentRound", lastRound);
+
         model.addAttribute("olderRounds", match.getOlderRounds());
 
         if (lastRound == null) {
@@ -91,7 +91,11 @@ public class MatchController {
             }).orElse(null);
 
             model.addAttribute("winner", winner.getPlayer().getName());
+        } else {
+            lastRound.setUserRounds(lastRound.getOrderedUserRounds());
         }
+
+        model.addAttribute("currentRound", lastRound);
 
         return "match";
     }
@@ -102,30 +106,24 @@ public class MatchController {
         Match match = currentRound.getMatch();
         List<Round> rounds = match.getRounds();
 
-        rounds.forEach(round -> {
-            System.out.println(round.getIdx());
-        });
-
-        rounds.sort(Comparator.comparing(Round::getIdx).reversed());
-
-        System.out.println("----------------------");
-
-        rounds.forEach(round -> {
-            System.out.println(round.getIdx());
-        });
-
         if (!Objects.equals(action, ACTION_RESULT)) {
             Round save = roundService.save(currentRound);
+            save.setUserRounds(save.getOrderedUserRounds());
+
             model.addFlashAttribute("currentRound", save);
             model.addFlashAttribute("olderRounds", rounds);
             model.addFlashAttribute("match", match);
             model.addFlashAttribute("action", ACTION_RESULT);
             return "redirect:/match/" + match.getId();
+        } else {
+            currentRound.getUserRounds().forEach(RoundUser::calculateScore);
+            currentRound.getUserRounds().forEach(roundUserService::save);
+            roundService.save(currentRound);
         }
 
-        Integer integer = currentRound.getUserRounds().stream().map(RoundUser::getNumberOfSetOfCardsWon).reduce(Integer::sum).orElse(0);
+        Integer wonSetCount = currentRound.getUserRounds().stream().map(RoundUser::getNumberOfSetOfCardsWon).reduce(Integer::sum).orElse(0);
 
-        if (!currentRound.getCurrentRoundIdxInteger().equals(integer)) {
+        if (!currentRound.getCurrentRoundIdxInteger().equals(wonSetCount)) {
             model.addFlashAttribute("olderRounds", rounds);
             model.addFlashAttribute("match", match);
             model.addFlashAttribute("currentRound", currentRound);
@@ -139,7 +137,8 @@ public class MatchController {
         Integer lastRoundIdx = maxNumberOfRounds + maxNumberOfRounds + 1;
 
         if (!lastRoundIdx.equals(rounds.size())) {
-            Round newRound = createRound(match, rounds.get(rounds.size() - 1));
+            Round newRound = createRound(match, currentRound);
+            newRound.setUserRounds(newRound.getOrderedUserRounds());
             model.addFlashAttribute("currentRound", newRound);
         } else {
             Round round = rounds.get(rounds.size() - 1);
@@ -189,7 +188,8 @@ public class MatchController {
                 currentOrder = currentOrder + 1;
             }
 
-            round.addUserRounds(roundUserService.save(new RoundUser(round, player, previousScore, currentOrder)));
+            RoundUser roundUser = new RoundUser(round, player, previousScore, currentOrder);
+            round.addUserRounds(roundUserService.save(roundUser));
         }
 
         return round;

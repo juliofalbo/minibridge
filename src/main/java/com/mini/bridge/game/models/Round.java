@@ -2,6 +2,7 @@ package com.mini.bridge.game.models;
 
 import javax.persistence.*;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Entity
@@ -38,6 +39,12 @@ public class Round {
 
     public List<RoundUser> getUserRounds() {
         return userRounds == null ? new ArrayList<>() : userRounds;
+    }
+
+    public List<RoundUser> getOrderedUserRounds() {
+        List<RoundUser> orderedUsers = new ArrayList<>(getUserRounds());
+        orderedUsers.sort(Comparator.comparing(RoundUser::getCurrentOrder));
+        return orderedUsers;
     }
 
     public void addUserRounds(RoundUser round) {

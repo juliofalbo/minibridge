@@ -70,7 +70,7 @@ public class RoundUser {
         return player;
     }
 
-    public Integer calculateRoundScore() {
+    private Integer calculateRoundScore() {
         return getSuccess() ? getNumberOfSetOfCardsWon() + 10 : getNumberOfSetOfCardsWon();
     }
 
@@ -102,17 +102,7 @@ public class RoundUser {
         return score;
     }
 
-    @PrePersist
-    protected void prePersist() {
-        if(this.score == null) {
-            this.score = 0;
-        }
-
-        this.score += calculateRoundScore();
-    }
-
-    @PreUpdate
-    protected void preUpdate() {
+    public void calculateScore() {
         if(this.score == null) {
             this.score = 0;
         }
