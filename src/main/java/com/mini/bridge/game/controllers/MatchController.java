@@ -83,17 +83,8 @@ public class MatchController {
         olderRounds.sort(Comparator.comparing(Round::getIdx).reversed());
         model.addAttribute("olderRounds", olderRounds);
 
-        if (lastRound == null) {
-            Round round = match.getRounds().get(match.getRounds().size() - 1);
-            RoundUser winner = round.getUserRounds().stream().reduce((roundUser, roundUser2) -> {
-                if (roundUser.getScore() > roundUser2.getScore()) {
-                    return roundUser;
-                }
-
-                return roundUser2;
-            }).orElse(null);
-
-            model.addAttribute("winner", winner.getPlayer().getName());
+        if (match.getWinner() != null) {
+            model.addAttribute("winner", match.getWinner().getName());
         } else {
             lastRound.setUserRounds(lastRound.getOrderedUserRounds());
         }
@@ -147,15 +138,22 @@ public class MatchController {
         } else {
             Round round = rounds.get(rounds.size() - 1);
 
-            RoundUser winner = round.getUserRounds().stream().reduce((roundUser, roundUser2) -> {
-                if (roundUser.getScore() > roundUser2.getScore()) {
-                    return roundUser;
+            RoundUser winner = null;
+
+            for (RoundUser userRound : round.getUserRounds()) {
+                if (winner == null) {
+                    winner = userRound;
+                } else {
+                    if (userRound.getScore() > winner.getScore()) {
+                        winner = userRound;
+                    }
                 }
+            }
 
-                return roundUser2;
-            }).orElse(null);
+            match.setWinner(winner.getPlayer());
+            matchService.save(match);
 
-            model.addFlashAttribute("winner", winner.getPlayer().getName());
+            model.addFlashAttribute("winner", match.getWinner().getName());
         }
 
         model.addFlashAttribute("olderRounds", rounds);

@@ -28,6 +28,9 @@ public class Match {
 
     private LocalDateTime updatedAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Player winner;
+
     public Match() {
 
     }
@@ -142,6 +145,14 @@ public class Match {
 
         partialRounds.forEach(round -> round.getUserRounds().sort(Comparator.comparing(RoundUser::getScore).reversed()));
         return partialRounds;
+    }
+
+    public Player getWinner() {
+        return winner;
+    }
+
+    public void setWinner(Player winner) {
+        this.winner = winner;
     }
 
     @PrePersist
